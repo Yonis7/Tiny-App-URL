@@ -4,6 +4,7 @@ const PORT = 8080; // default port 8080
 
 app.set("view engine", "ejs");
 
+// Middleware that is used to parse the body of the request sent to the server
 app.use(express.urlencoded({ extended: true }));
 
 const generateRandomString = () => {
@@ -60,11 +61,16 @@ app.post("/urls", (req, res) => {
 
 });
 
+// POST route used for deleting URLs on the server side
+app.post("/urls/:id/delete", (req, res) => {
+  const id = req.params.id;
+  delete urlDatabase[id];
+  res.redirect("/urls");
+});
 // Used to redirect the user to the longURL when they click on the shortURL
 app.get("/u/:id", (req, res) => {
   const longURL = urlDatabase[req.params.id];
   res.redirect(longURL);
 });
-
 
 
