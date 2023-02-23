@@ -1,5 +1,7 @@
 const express = require("express");
 const app = express();
+
+// used to parse the cookie header and populate req.cookies with an object keyed by the cookie names
 const cookieParser = require('cookie-parser')
 
 const PORT = 8080; // default port 8080
@@ -10,6 +12,7 @@ app.use(cookieParser());
 // Middleware that is used to parse the body of the request sent to the server
 app.use(express.urlencoded({ extended: true }));
 
+//This function is used to generate a random string for the shortURL
 const generateRandomString = () => {
   return Math.random().toString(36).substr(2, 6);
 };
@@ -99,6 +102,12 @@ app.post("/login", (req, res) => {
   res.cookie("username", username);
 
   res.redirect("/urls");
-})
+});
+
+// This is used to clear the cookie when the user clicks on the logout button
+app.post("/logout", (req, res) => {
+  res.clearCookie("username");
+  res.redirect("/urls");
+});
 
 
