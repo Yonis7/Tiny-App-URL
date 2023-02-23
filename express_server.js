@@ -67,6 +67,15 @@ app.post("/urls/:id/delete", (req, res) => {
   delete urlDatabase[id];
   res.redirect("/urls");
 });
+// POST route used for updating URLs on the server side
+app.post("/urls/:id", (req, res) => {
+  const shortURL = req.params.id;
+  const newLongURL = req.body.longURL;
+  urlDatabase[shortURL] = newLongURL; // Update the value of the shortURL key to the new longURL value
+  res.redirect("/urls");
+});
+
+
 // Used to redirect the user to the longURL when they click on the shortURL
 app.get("/u/:id", (req, res) => {
   const longURL = urlDatabase[req.params.id];
