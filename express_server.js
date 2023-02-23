@@ -110,4 +110,8 @@ app.post("/logout", (req, res) => {
   res.redirect("/urls");
 });
 
+// This route is used to render the register page
+app.get("/register", (req, res) => {
 
+  res.render("register");
+})
