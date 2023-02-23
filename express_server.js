@@ -82,4 +82,13 @@ app.get("/u/:id", (req, res) => {
   res.redirect(longURL);
 });
 
+app.post("/login", (req, res) => {
+  //This is used to get the username from the form
+  const username = req.body.username;
+  //This is used to set the username as a cookie
+  res.cookie("username", username);
+
+  res.redirect("/urls");
+})
+
 
