@@ -79,11 +79,19 @@ app.get("/urls", (req, res) => {
 
 app.get("/urls/new", (req, res) => {
   // This variable is used to get the user from the users object
-  const user = users[req.cookies["user_id"]]
-  // This variable is used to pass the user object to the urls_new.ejs file
+  const user = getUserByEmail(req.cookies["user_id"]);
   const templateVars = { user };
+  if (!user) {
+    res.redirect("/login");
+  } else {
+    res.render("urls_new", templateVars);
+  }
+  // // This variable is used to get the user from the users object
+  // const user = users[req.cookies["user_id"]]
+  // This variable is used to pass the user object to the urls_new.ejs file
+  
 
-  res.render("urls_new", templateVars);
+  
 });
 
 app.get("/urls/:id", (req, res) => {
@@ -98,7 +106,12 @@ app.get("/urls/:id", (req, res) => {
 
 
 app.post("/urls", (req, res) => {
-
+  // This variable is used to get the user from the users object
+  const user = getUserByEmail(req.cookies["user_id"]);
+  // This is used to check if the user exists
+  if (!user) {
+    res.status(400).send("You must be logged in to create a short URL");
+  } 
   //Used to create a random string for the shortURL
   const shortURL = generateRandomString();
   //Used to add the shortURL and longURL to the urlDatabase as a key value pair where shortURL is the key and req.body.longURL is the value
@@ -106,6 +119,7 @@ app.post("/urls", (req, res) => {
 
   // console.log(req.body); // Log the POST request body to the console
 
+    
   //Redirect the user to the new page that shows them the new short URL they created
   res.redirect(`/urls/${shortURL}`)
 
@@ -126,10 +140,19 @@ app.post("/urls/:id", (req, res) => {
 });
 
 
+// This route needs work to make it worki invalid urls still go through
 // Used to redirect the user to the longURL when they click on the shortURL
 app.get("/u/:id", (req, res) => {
-  const longURL = urlDatabase[req.params.id];
-  res.redirect(longURL);
+  
+  // This variable is used to get the user from the users object
+  const url = urlDatabase[req.params.id];
+  // This is used to check if the url exists
+  if (!url) {
+    res.status(400).send("URL not found");
+    } else {
+      res.redirect(url);
+    }
+  // This is used to redirect the user to the url
 });
 
 app.post("/login", (req, res) => {
@@ -166,8 +189,15 @@ res.redirect("/login");
 
 // This route is used to render the register page
 app.get("/register", (req, res) => {
+  const user = users[req.cookies["user_id"]];
+  // This is used to check if the user is logged in if a user is logged in then it will redirect them to the urls page
+  if (user) { 
+    res.redirect("/urls");
+  } else {
+    res.render("register");
+  }
 
-  res.render("register");
+  
 })
 
 // This route handles the registration form data
@@ -206,5 +236,12 @@ app.post('/register', (req,res) => {
 
 // Rotue for the login page
 app.get("/login", (req, res) => {
+  // If the user is logged in, GET /login should redirect to GET /urls
+  const user = users[req.cookies["user_id"]];
+  if (user) {
+    res.redirect("/urls");
+  } else {
   res.render("login");
+  }
+
 })
