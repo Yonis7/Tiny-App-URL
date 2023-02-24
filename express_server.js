@@ -22,7 +22,7 @@ const generateRandomString = () => {
   return result;
 };
 
-const getUserByEmail = (email, users) => {
+const getUserByEmail = (email) => {
   for (const userId in users) {
     if (users[userId].email === email) {
       return users[userId];
@@ -133,8 +133,9 @@ app.get("/u/:id", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  const username = req.body.username;
-  const user = getUserByUsername(username);
+  const email = req.body.email;
+  const password = req.body.password;
+  const user = getUserByEmail(email);
 
   // This is used to check if the user exists
   if (user) {
@@ -145,22 +146,22 @@ app.post("/login", (req, res) => {
   }
 });
 
-// Helper function to get user object by username
-function getUserByUsername(username) {
-  for (const userId in users) {
-    const user = users[userId];
-    if (user.username === username) {
-      return user;
-    }
-  }
-  return null;
-}
+// // Helper function to get user object by username
+// function getUserByUsername(username) {
+//   for (const userId in users) {
+//     const user = users[userId];
+//     if (user.username === username) {
+//       return user;
+//     }
+//   }
+//   return null;
+// }
 
 
 // This is used to clear the cookie when the user clicks on the logout button
 app.post("/logout", (req, res) => {
 res.cookie("user_id", "");
-res.redirect("/urls");
+res.redirect("/login");
 });
 
 // This route is used to render the register page
