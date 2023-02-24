@@ -22,6 +22,15 @@ const generateRandomString = () => {
   return result;
 };
 
+const getUserByEmail = (email, users) => {
+  for (const userId in users) {
+    if (users[userId].email === email) {
+      return users[userId];
+    }
+  }
+};
+
+
 
 const users = {
   userRandomID: {
@@ -162,7 +171,7 @@ app.get("/register", (req, res) => {
 
 // This route handles the registration form data
 app.post('/register', (req,res) => {
-  const id = generteRandomString();
+  const id = generateRandomString();
   // This is used to get the email and password from the form
   const email = req.body.email;
   const password = req.body.password;
@@ -192,4 +201,9 @@ app.post('/register', (req,res) => {
   // This is used to redirect the user to the urls page
   res.redirect("/urls");
 
+})
+
+// Rotue for the login page
+app.get("/login", (req, res) => {
+  res.render("login");
 })
