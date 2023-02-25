@@ -30,6 +30,15 @@ const getUserByEmail = (email) => {
   }
 };
 
+const urlsForUser = (id) => {
+  const filteredUrls = {};
+  for (const shortUrl in urlDatabase) {
+    if (urlDatabase[shortUrl].userID === id) {
+      filteredUrls[shortUrl] = urlDatabase[shortUrl];
+    }
+  }
+  return filteredUrls;
+}
 
 
 const users = {
@@ -46,8 +55,14 @@ const users = {
 };
 
 const urlDatabase = {
-  b2xVn2: "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com",
+  b6UTxQ: {
+    longURL: "https://www.tsn.ca",
+    userID: "aJ48lW",
+  },
+  i3BoGr: {
+    longURL: "https://www.google.ca",
+    userID: "aJ48lW",
+  },
 };
 
 app.get("/", (req, res) => {
@@ -67,23 +82,42 @@ app.get("/hello", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-  // This variable is used to get the user from the users object
-  const user = users[req.cookies["user_id"]]
+  const userId = req.cookies["user_id"];
+
+  // Check if user is logged in
+  if (!userId) {
+    return res.status(401).send("Please log in or register");
+  }
+
+  // Get user object from users database
+  const user = users[userId];
+
+  const userURL = urlsForUser(userId);
+
 
   const templateVars = {
-    urls: urlDatabase,
+    urls: userURL,
     user
-  };  
+  };
+
   res.render("urls_index", templateVars);
 });
 
+
 app.get("/urls/new", (req, res) => {
   // This variable is used to get the user from the users object
-  const user = getUserByEmail(req.cookies["user_id"]);
-  const templateVars = { user };
-  if (!user) {
-    res.redirect("/login");
+  const userId = req.cookies['user_id'];
+  
+  // This is used to check if the user exists
+  if (!userId) {
+    return res.status(401).send("Please log in or register");
+    // If the user does exist then render the urls_new.ejs file
   } else {
+    const user = users[userId];
+
+    const templateVars = {
+      user
+    };
     res.render("urls_new", templateVars);
   }
   // // This variable is used to get the user from the users object
@@ -95,27 +129,50 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.get("/urls/:id", (req, res) => {
-  const user = users[req.cookies["user_id"]];
+  const userId = req.cookies["user_id"];
+
+  // Check if user is logged in
+  if (!userId) {
+    return res.status(401).send("Please log in or register");
+  };
+
+  // Check if user has access to URL
+  const url = urlDatabase[req.params.id];
+  if (!url) {
+    return res.status(404).send("URL not found");
+  }
+  if (url.userID !== userId) {
+    return res.status(403).send("You do not have access to this URL");
+  }
+
+  // const user = users[userId];
+
   const templateVars = { 
     id: req.params.id, 
-    longURL: urlDatabase[req.params.id],
-    user
+    longURL: url.longURL,
+    user: users[userId]
   };
   res.render("urls_show", templateVars);
 });
 
 
 app.post("/urls", (req, res) => {
-  // This variable is used to get the user from the users object
-  const user = getUserByEmail(req.cookies["user_id"]);
+
+  // This is used to get the userId from the cookies
+  const userId = req.cookies['user_id'];
+  
   // This is used to check if the user exists
-  if (!user) {
-    res.status(400).send("You must be logged in to create a short URL");
-  } 
+  if (!userId) {
+    return res.status(401).send("Please log in or register");
+  }
   //Used to create a random string for the shortURL
   const shortURL = generateRandomString();
   //Used to add the shortURL and longURL to the urlDatabase as a key value pair where shortURL is the key and req.body.longURL is the value
-  urlDatabase[shortURL] = req.body.longURL
+  urlDatabase[shortURL] = {
+    longURL : req.body.longURL,
+    userID : userId
+
+  }
 
   // console.log(req.body); // Log the POST request body to the console
 
@@ -133,9 +190,10 @@ app.post("/urls/:id/delete", (req, res) => {
 });
 // POST route used for updating URLs on the server side
 app.post("/urls/:id", (req, res) => {
+
   const shortURL = req.params.id;
   const newLongURL = req.body.longURL;
-  urlDatabase[shortURL] = newLongURL; // Update the value of the shortURL key to the new longURL value
+  urlDatabase[shortURL].longURL = newLongURL; // Update the value of the shortURL key to the new longURL value
   res.redirect("/urls");
 });
 
