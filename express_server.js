@@ -1,28 +1,11 @@
 const express = require("express");
 const app = express();
 
-// used to parse the cookie header and populate req.cookies with an object keyed by the cookie names
-// const cookieParser = require('cookie-parser');
-
 // We will switch to using cookie-session instead of cookie-parser because it is more secure
 const cookieSession = require("cookie-session");
-
 const bcrypt = require("bcryptjs");
-
 const PORT = 8080; // default port 8080
 
-// // set cookie
-// res.cookie("user_id", user.id);
-
-// // read cookie
-// const userId = req.cookies.user_id;
-// After:
-
-// // set session
-// req.session.user_id = user.id;
-
-// // read session
-// const userId = req.session.user_id;
 
 app.set("view engine", "ejs");
 
@@ -36,7 +19,8 @@ app.use(
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
   })
 );
-// app.use(cookieParser());
+
+
 // Middleware that is used to parse the body of the request sent to the server
 app.use(express.urlencoded({ extended: true }));
 
@@ -50,15 +34,6 @@ const generateRandomString = () => {
   return result;
 };
 
-//// Original function before refactoring
-
-// const getUserByEmail = (email) => {
-//   for (const userId in users) {
-//     if (users[userId].email === email) {
-//       return users[userId];
-//     }
-//   }
-// };
 
 // Refactored function required to be used from the helpers.js file
 const { getUserByEmail } = require("./helpers");
@@ -146,9 +121,7 @@ app.get("/urls/new", (req, res) => {
     };
     res.render("urls_new", templateVars);
   }
-  // // This variable is used to get the user from the users object
-  // const user = users[req.cookies["user_id"]]
-  // This variable is used to pass the user object to the urls_new.ejs file
+  
 });
 
 app.get("/urls/:id", (req, res) => {
@@ -219,6 +192,7 @@ app.post("/urls/:id", (req, res) => {
 app.get("/u/:id", (req, res) => {
   // This variable is used to get the user from the users object
   const url = urlDatabase[req.params.id];
+  
   // This is used to check if the url exists
   if (!url) {
     res.status(400).send("URL not found");
@@ -235,9 +209,11 @@ app.post("/login", (req, res) => {
 
   // This is used to check if the user exists
   if (user && bcrypt.compareSync(password, user.password)) {
+
     // This is used to set the cookie to the user id
     req.session.user_id = user.id;
     res.redirect("/urls");
+  
   } else {
     res.status(400).send("User not found");
   }
@@ -309,15 +285,18 @@ app.post("/register", (req, res) => {
 
 // Rotue for the login page
 app.get("/login", (req, res) => {
+  
   // If the user is logged in, GET /login should redirect to GET /urls
   const user = users[req.session["user_id"]];
   if (user) {
     res.redirect("/urls");
+  
   } else {
     res.render("login");
   }
 });
 
+// Used to tell console what port the server is running on
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
