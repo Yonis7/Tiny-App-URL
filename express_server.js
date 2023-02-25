@@ -2,7 +2,9 @@ const express = require("express");
 const app = express();
 
 // used to parse the cookie header and populate req.cookies with an object keyed by the cookie names
-const cookieParser = require('cookie-parser')
+const cookieParser = require('cookie-parser');
+const bcrypt = require("bcryptjs");
+
 
 const PORT = 8080; // default port 8080
 
@@ -219,7 +221,7 @@ app.post("/login", (req, res) => {
   const user = getUserByEmail(email);
 
   // This is used to check if the user exists
-  if (user) {
+  if (user && bcrypt.compareSync(password, user.password)) {
     res.cookie("user_id", user.id);
     res.redirect("/urls");
   } else {
@@ -277,10 +279,13 @@ app.post('/register', (req,res) => {
     return;
   }
 
+  const hashedPassword = bcrypt.hashSync(password, 10);
+
+  // This is used to create a new user object
   const newUser = {
     id,
     email,
-    password
+    password: hashedPassword // This is used to hash the password and store it rather than the plain text password
   }
   // This is used to check if the email is already in the database
   users[id] = newUser;
