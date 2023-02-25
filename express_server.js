@@ -2,15 +2,42 @@ const express = require("express");
 const app = express();
 
 // used to parse the cookie header and populate req.cookies with an object keyed by the cookie names
-const cookieParser = require('cookie-parser');
+// const cookieParser = require('cookie-parser');
+
+// We will switch to using cookie-session instead of cookie-parser because it is more secure
+const cookieSession = require('cookie-session')
+
 const bcrypt = require("bcryptjs");
 
 
 const PORT = 8080; // default port 8080
 
+// // set cookie
+// res.cookie("user_id", user.id);
+
+// // read cookie
+// const userId = req.cookies.user_id;
+// After:
+
+// // set session
+// req.session.user_id = user.id;
+
+// // read session
+// const userId = req.session.user_id;
+
+
+
 app.set("view engine", "ejs");
 
-app.use(cookieParser());
+// This is used to parse the cookie header and populate req.cookies with an object keyed by the cookie names it will also have a maxAge property if the cookie contains the Expires or Max-Age attribute
+app.use(cookieSession({
+  name: 'session',
+  keys: [`key1`],
+
+  // Cookie Options
+  maxAge: 24 * 60 * 60 * 1000 // 24 hours
+}))
+// app.use(cookieParser());
 // Middleware that is used to parse the body of the request sent to the server
 app.use(express.urlencoded({ extended: true }));
 
@@ -71,9 +98,7 @@ app.get("/", (req, res) => {
   res.send("Hello!");
 });
 
-app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}!`);
-});
+
 
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
@@ -84,7 +109,8 @@ app.get("/hello", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-  const userId = req.cookies["user_id"];
+  const userId = req.session.user_id;
+
 
   // Check if user is logged in
   if (!userId) {
@@ -108,7 +134,8 @@ app.get("/urls", (req, res) => {
 
 app.get("/urls/new", (req, res) => {
   // This variable is used to get the user from the users object
-  const userId = req.cookies['user_id'];
+  const userId = req.session.user_id;
+
   
   // This is used to check if the user exists
   if (!userId) {
@@ -131,7 +158,8 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.get("/urls/:id", (req, res) => {
-  const userId = req.cookies["user_id"];
+  const userId = req.session.user_id;
+
 
   // Check if user is logged in
   if (!userId) {
@@ -161,7 +189,10 @@ app.get("/urls/:id", (req, res) => {
 app.post("/urls", (req, res) => {
 
   // This is used to get the userId from the cookies
-  const userId = req.cookies['user_id'];
+  const userId = req.session.user_id;
+
+
+
   
   // This is used to check if the user exists
   if (!userId) {
@@ -222,7 +253,9 @@ app.post("/login", (req, res) => {
 
   // This is used to check if the user exists
   if (user && bcrypt.compareSync(password, user.password)) {
-    res.cookie("user_id", user.id);
+    
+    // This is used to set the cookie to the user id
+    req.session.user_id = user.id;
     res.redirect("/urls");
   } else {
     res.status(400).send("User not found");
@@ -243,13 +276,13 @@ app.post("/login", (req, res) => {
 
 // This is used to clear the cookie when the user clicks on the logout button
 app.post("/logout", (req, res) => {
-res.cookie("user_id", "");
+req.session = null;
 res.redirect("/login");
 });
 
 // This route is used to render the register page
 app.get("/register", (req, res) => {
-  const user = users[req.cookies["user_id"]];
+  const user = users[req.session["user_id"]];
   // This is used to check if the user is logged in if a user is logged in then it will redirect them to the urls page
   if (user) { 
     res.redirect("/urls");
@@ -289,8 +322,8 @@ app.post('/register', (req,res) => {
   }
   // This is used to check if the email is already in the database
   users[id] = newUser;
-  // This is used to set the user_id cookie
-  res.cookie("user_id", id);
+  // This is used to set the user_id session variable
+  req.session.user_id = id;
 
   // This is used to redirect the user to the urls page
   res.redirect("/urls");
@@ -300,7 +333,7 @@ app.post('/register', (req,res) => {
 // Rotue for the login page
 app.get("/login", (req, res) => {
   // If the user is logged in, GET /login should redirect to GET /urls
-  const user = users[req.cookies["user_id"]];
+  const user = users[req.session["user_id"]];
   if (user) {
     res.redirect("/urls");
   } else {
@@ -308,3 +341,7 @@ app.get("/login", (req, res) => {
   }
 
 })
+
+app.listen(PORT, () => {
+  console.log(`Example app listening on port ${PORT}!`);
+});
