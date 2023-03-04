@@ -64,7 +64,8 @@ app.get("/urls/new", (req, res) => {
 
   // This is used to check if the user exists
   if (!userId) {
-    return res.status(401).send("Please log in or register");
+    res.redirect("/login")
+    res.status(401).send("Please log in or register");
     // If the user does exist then render the urls_new.ejs file
   } else {
     const user = users[userId];
@@ -73,11 +74,12 @@ app.get("/urls/new", (req, res) => {
       user
     };
 
-    console.log(templateVars)
+    // console.log(templateVars)
     res.render("urls_new", templateVars);
   }
   
 });
+
 
 app.get("/urls/:id", (req, res) => {
   const userId = req.session.user_id;
